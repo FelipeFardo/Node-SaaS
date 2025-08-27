@@ -1,12 +1,10 @@
-import { asc, eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { roleSchema } from "@/auth";
 
-import { db, invites, organizations, users } from "@/db/connection";
+import { InviteRepository } from "@/repositories/invite-repository";
 import { getUserPermissions } from "@/utils/get-user-permissions";
-
 import { auth } from "../../middlewares/auth";
 import { UnauthorizedError } from "../_errors/unauthorized-error";
 
@@ -51,6 +49,8 @@ export async function getInvites(app: FastifyInstance) {
 				const { membership, organization } =
 					await request.getUserMembership(slug);
 
+				const inviteRepository = new InviteRepository();
+
 				const { cannot } = getUserPermissions(userId, membership.role);
 
 				if (cannot("get", "Invite")) {
@@ -59,27 +59,9 @@ export async function getInvites(app: FastifyInstance) {
 					);
 				}
 
-				const invitesQuery = await db
-					.select({
-						invites: {
-							id: invites.id,
-							email: invites.email,
-							role: invites.role,
-							createdAt: invites.createdAt,
-						},
-						author: {
-							id: users.id,
-							name: users.name,
-						},
-					})
-					.from(invites)
-					.innerJoin(users, eq(invites.authorId, users.id))
-					.innerJoin(
-						organizations,
-						eq(invites.organizationId, organizations.id),
-					)
-					.where(eq(organizations.slug, organization.slug))
-					.orderBy(asc(invites.createdAt));
+				const invitesQuery = await inviteRepository.getInvitesByOrgSlug(
+					organization.slug,
+				);
 
 				const invitesFormat = invitesQuery.map((invite) => {
 					return {

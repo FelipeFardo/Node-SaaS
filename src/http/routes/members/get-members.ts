@@ -1,12 +1,10 @@
-import { eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { roleSchema } from "@/auth";
 
-import { db, members, users } from "@/db/connection";
+import { MemberRepository } from "@/repositories/member-repository";
 import { getUserPermissions } from "@/utils/get-user-permissions";
-
 import { auth } from "../../middlewares/auth";
 import { UnauthorizedError } from "../_errors/unauthorized-error";
 
@@ -47,6 +45,7 @@ export async function getMembers(app: FastifyInstance) {
 				const { membership, organization } =
 					await request.getUserMembership(slug);
 
+				const memberRepository = new MemberRepository();
 				const { cannot } = getUserPermissions(userId, membership.role);
 
 				if (cannot("get", "User")) {
@@ -55,23 +54,9 @@ export async function getMembers(app: FastifyInstance) {
 					);
 				}
 
-				const membersQuery = await db
-					.select({
-						members: {
-							id: members.id,
-							role: members.role,
-						},
-						users: {
-							id: users.id,
-							name: users.name,
-							email: users.email,
-							avatarUrl: users.avatarUrl,
-						},
-					})
-					.from(members)
-					.innerJoin(users, eq(members.userId, users.id))
-					.where(eq(members.organizationId, organization.id))
-					.orderBy(members.role);
+				const membersQuery = await memberRepository.getMembersWithUsersByOrgId(
+					organization.id,
+				);
 
 				const membersWithRoles = membersQuery.map(({ users, members }) => {
 					return {

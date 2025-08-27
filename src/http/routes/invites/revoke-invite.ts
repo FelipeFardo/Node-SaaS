@@ -1,11 +1,9 @@
-import { and, eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 
-import { db, invites } from "@/db/connection";
+import { InviteRepository } from "@/repositories/invite-repository";
 import { getUserPermissions } from "@/utils/get-user-permissions";
-
 import { auth } from "../../middlewares/auth";
 import { BadRequestError } from "../_errors/bad-request-error";
 import { UnauthorizedError } from "../_errors/unauthorized-error";
@@ -37,6 +35,8 @@ export async function revokeInvite(app: FastifyInstance) {
 				const { membership, organization } =
 					await request.getUserMembership(slug);
 
+				const inviteRepository = new InviteRepository();
+
 				const { cannot } = getUserPermissions(userId, membership.role);
 
 				if (cannot("delete", "Invite")) {
@@ -45,20 +45,16 @@ export async function revokeInvite(app: FastifyInstance) {
 					);
 				}
 
-				const invite = await db.query.invites.findFirst({
-					where(fields) {
-						return and(
-							eq(fields.id, inviteId),
-							eq(fields.organizationId, organization.id),
-						);
-					},
+				const invite = await inviteRepository.getInviteByIdAndOrgId({
+					inviteId,
+					organizationId: organization.id,
 				});
 
 				if (!invite) {
 					throw new BadRequestError("Invite not found");
 				}
 
-				await db.delete(invites).where(eq(invites.id, inviteId));
+				await inviteRepository.deleteInviteById(inviteId);
 
 				return reply.status(204).send();
 			},

@@ -1,11 +1,9 @@
-import { and, count, eq, ne } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
-
-import { db, members, projects } from "@/db/connection";
+import { MemberRepository } from "@/repositories/member-repository";
+import { ProjectRepository } from "@/repositories/project-repository";
 import { getUserPermissions } from "@/utils/get-user-permissions";
-
 import { auth } from "../../middlewares/auth";
 import { UnauthorizedError } from "../_errors/unauthorized-error";
 
@@ -57,22 +55,12 @@ export async function getOrganizationBilling(app: FastifyInstance) {
 					);
 				}
 
+				const memberRepository = new MemberRepository();
+				const projectRepository = new ProjectRepository();
+
 				const [amountOfMembers, amontOfProjects] = await Promise.all([
-					db
-						.select({ count: count() })
-						.from(members)
-						.where(
-							and(
-								eq(members.organizationId, organization.id),
-								ne(members.role, "BILLING"),
-							),
-						)
-						.then((result) => result[0].count),
-					db
-						.select({ count: count() })
-						.from(projects)
-						.where(eq(projects.organizationId, organization.id))
-						.then((result) => result[0].count),
+					memberRepository.countMembersNoBillingRoleByOrgId(organization.id),
+					projectRepository.countProjectsByOrgId(organization.id),
 				]);
 
 				return {

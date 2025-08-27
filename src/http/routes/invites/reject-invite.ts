@@ -1,11 +1,10 @@
-import { eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 
-import { db, invites } from "@/db/connection";
 import { auth } from "@/http/middlewares/auth";
-
+import { InviteRepository } from "@/repositories/invite-repository";
+import { UserRepository } from "@/repositories/user-repository";
 import { BadRequestError } from "../_errors/bad-request-error";
 
 export async function rejectInvite(app: FastifyInstance) {
@@ -30,21 +29,16 @@ export async function rejectInvite(app: FastifyInstance) {
 				const userId = await request.getCurrentUserId();
 				const { inviteId } = request.params;
 
-				const invite = await db.query.invites.findFirst({
-					where(fields) {
-						return eq(fields.id, inviteId);
-					},
-				});
+				const userRepository = new UserRepository();
+				const inviteRepository = new InviteRepository();
+
+				const invite = await inviteRepository.getInviteById(inviteId);
 
 				if (!invite) {
 					throw new BadRequestError("Invite not found or expired");
 				}
 
-				const user = await db.query.users.findFirst({
-					where(fields) {
-						return eq(fields.id, userId);
-					},
-				});
+				const user = await userRepository.getUserById(userId);
 
 				if (!user) {
 					throw new BadRequestError("User not found");
@@ -54,7 +48,7 @@ export async function rejectInvite(app: FastifyInstance) {
 					throw new BadRequestError("This invite belongs to another user.");
 				}
 
-				await db.delete(invites).where(eq(invites.id, inviteId));
+				await inviteRepository.deleteInviteById(inviteId);
 
 				return reply.status(204).send();
 			},

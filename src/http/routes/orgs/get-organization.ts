@@ -1,8 +1,7 @@
-import { eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { db } from "@/db/connection";
+import { OrganizationRepository } from "@/repositories/organization-repository";
 import { BadRequestError } from "../_errors/bad-request-error";
 
 export async function getOrganization(app: FastifyInstance) {
@@ -40,11 +39,10 @@ export async function getOrganization(app: FastifyInstance) {
 			async (request) => {
 				const { slug } = request.params;
 
-				const organization = await db.query.organizations.findFirst({
-					where(fields) {
-						return eq(fields.slug, slug);
-					},
-				});
+				const organizationRepository = new OrganizationRepository();
+
+				const organization =
+					await organizationRepository.getOrganizationBySlug(slug);
 
 				if (!organization) {
 					throw new BadRequestError("Organization Not Found");

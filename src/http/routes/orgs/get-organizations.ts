@@ -2,43 +2,43 @@ import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 
-import { db } from "@/db/connection";
+import { auth } from "@/http/middlewares/auth";
+import { OrganizationRepository } from "@/repositories/organization-repository";
 
 export async function getOrganizations(app: FastifyInstance) {
-	app.withTypeProvider<ZodTypeProvider>().get(
-		"/organizations",
-		{
-			schema: {
-				tags: ["organizations"],
-				summary: "Get all organizations ",
-				response: {
-					200: z.object({
-						organizations: z.array(
-							z.object({
-								id: z.string().uuid(),
-								name: z.string(),
-								slug: z.string(),
-								avatarUrl: z.string().url().nullable(),
-							}),
-						),
-					}),
+	app
+		.withTypeProvider<ZodTypeProvider>()
+		.register(auth)
+		.get(
+			"/organizations",
+			{
+				schema: {
+					tags: ["organizations"],
+					summary: "Get all organizations ",
+					response: {
+						200: z.object({
+							organizations: z.array(
+								z.object({
+									id: z.string().uuid(),
+									name: z.string(),
+									slug: z.string(),
+									avatarUrl: z.string().url().nullable(),
+								}),
+							),
+						}),
+					},
 				},
 			},
-		},
-		async () => {
-			const allOrganizations = await db.query.organizations.findMany({
-				columns: {
-					id: true,
-					name: true,
-					slug: true,
-					avatarUrl: true,
-					description: true,
-				},
-			});
+			async (request) => {
+				const userId = await request.getCurrentUserId();
 
-			return {
-				organizations: allOrganizations,
-			};
-		},
-	);
+				const organizationRepository = new OrganizationRepository();
+				const organizations =
+					await organizationRepository.getOrganizationsByUserId(userId);
+
+				return {
+					organizations,
+				};
+			},
+		);
 }

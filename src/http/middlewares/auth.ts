@@ -1,8 +1,6 @@
-import { and, eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { fastifyPlugin } from "fastify-plugin";
-
-import { db, members, organizations } from "../../db/connection";
+import { MemberRepository } from "@/repositories/member-repository";
 import { UnauthorizedError } from "../routes/_errors/unauthorized-error";
 
 export const auth = fastifyPlugin(async (app: FastifyInstance) => {
@@ -20,16 +18,12 @@ export const auth = fastifyPlugin(async (app: FastifyInstance) => {
 		request.getUserMembership = async (orgSlug: string) => {
 			const userId = await request.getCurrentUserId();
 
-			const [member] = await db
-				.select({
-					members,
-					organizations,
-				})
-				.from(members)
-				.innerJoin(organizations, eq(members.organizationId, organizations.id))
-				.where(
-					and(eq(members.userId, userId), eq(organizations.slug, orgSlug)),
-				);
+			const memberRepository = new MemberRepository();
+
+			const member = await memberRepository.getMemberByUserIdAndOrgSlug({
+				orgSlug,
+				userId,
+			});
 
 			if (!member) {
 				throw new UnauthorizedError(

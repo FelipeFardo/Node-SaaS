@@ -1,10 +1,10 @@
 import { hash } from "bcryptjs";
-import { eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import z from "zod";
 
-import { db, tokens, users } from "@/db/connection";
+import { TokenRepository } from "@/repositories/token-repository";
+import { UserRepository } from "@/repositories/user-repository";
 import { UnauthorizedError } from "../_errors/unauthorized-error";
 
 export async function resetPassword(app: FastifyInstance) {
@@ -23,11 +23,10 @@ export async function resetPassword(app: FastifyInstance) {
 		async (request, reply) => {
 			const { code, password } = request.body;
 
-			const tokenFromCode = await db.query.tokens.findFirst({
-				where(fields) {
-					return eq(fields.id, code);
-				},
-			});
+			const userRepository = new UserRepository();
+			const tokenRepository = new TokenRepository();
+
+			const tokenFromCode = await tokenRepository.getTokenFromCode(code);
 
 			if (!tokenFromCode) {
 				throw new UnauthorizedError();
@@ -35,16 +34,10 @@ export async function resetPassword(app: FastifyInstance) {
 
 			const passwordHash = await hash(password, 6);
 
-			await db.transaction(async (trx) => {
-				await trx
-					.update(users)
-					.set({
-						passwordHash,
-					})
-					.where(eq(users.id, tokenFromCode.userId))
-					.returning();
-
-				await trx.delete(tokens).where(eq(tokens.id, code));
+			await userRepository.updatePasswordFromReset({
+				passwordHash,
+				userId: tokenFromCode.userId,
+				code,
 			});
 
 			return reply.status(204).send();

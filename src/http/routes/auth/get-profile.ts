@@ -1,9 +1,8 @@
-import { eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import z from "zod";
-import { db } from "@/db/connection";
 import { auth } from "@/http/middlewares/auth";
+import { UserRepository } from "@/repositories/user-repository";
 import { BadRequestError } from "../_errors/bad-request-error";
 
 export async function getProfile(app: FastifyInstance) {
@@ -32,17 +31,9 @@ export async function getProfile(app: FastifyInstance) {
 			async (request, reply) => {
 				const userId = await request.getCurrentUserId();
 
-				const user = await db.query.users.findFirst({
-					columns: {
-						id: true,
-						name: true,
-						email: true,
-						avatarUrl: true,
-					},
-					where(fields) {
-						return eq(fields.id, userId);
-					},
-				});
+				const userRepository = new UserRepository();
+
+				const user = await userRepository.getUserProfileById(userId);
 
 				if (!user) {
 					throw new BadRequestError("User not found");

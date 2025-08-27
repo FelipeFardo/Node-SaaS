@@ -1,12 +1,10 @@
-import { and, eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { userSchema } from "@/auth";
 
-import { db, members, organizations } from "@/db/connection";
+import { MemberRepository } from "@/repositories/member-repository";
 import { getUserPermissions } from "@/utils/get-user-permissions";
-
 import { auth } from "../../middlewares/auth";
 import { UnauthorizedError } from "../_errors/unauthorized-error";
 
@@ -37,21 +35,13 @@ export async function removeMember(app: FastifyInstance) {
 				const { membership, organization } =
 					await request.getUserMembership(slug);
 
+				const memberRepository = new MemberRepository();
 				const { cannot } = getUserPermissions(userId, membership.role);
 
-				const [{ members: memberRemove }] = await db
-					.select()
-					.from(members)
-					.innerJoin(
-						organizations,
-						eq(members.organizationId, organizations.id),
-					)
-					.where(
-						and(
-							eq(members.id, memberId),
-							eq(members.organizationId, organization.id),
-						),
-					);
+				const memberRemove = await memberRepository.getMemberByIdAndOrgId({
+					memberId,
+					organizationId: organization.id,
+				});
 
 				if (!memberRemove) {
 					throw new UnauthorizedError(
@@ -73,14 +63,10 @@ export async function removeMember(app: FastifyInstance) {
 					);
 				}
 
-				await db
-					.delete(members)
-					.where(
-						and(
-							eq(members.id, memberId),
-							eq(members.organizationId, organization.id),
-						),
-					);
+				await memberRepository.deleteMember({
+					memberId: memberRemove.id,
+					organizationId: organization.id,
+				});
 
 				return reply.status(204).send();
 			},

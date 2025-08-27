@@ -1,8 +1,7 @@
-import { and, eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { db, projects, users } from "@/db/connection";
+import { ProjectRepository } from "@/repositories/project-repository";
 import { getUserPermissions } from "@/utils/get-user-permissions";
 import { auth } from "../../middlewares/auth";
 import { BadRequestError } from "../_errors/bad-request-error";
@@ -60,30 +59,11 @@ export async function getProject(app: FastifyInstance) {
 					);
 				}
 
-				const [project] = await db
-					.select({
-						id: projects.id,
-						name: projects.name,
-						description: projects.description,
-						slug: projects.slug,
-						ownerId: projects.ownerId,
-						avatarUrl: projects.avatarUrl,
-						organizationId: projects.organizationId,
-						owner: {
-							id: users.id,
-							name: users.name,
-							avatarUrl: users.avatarUrl,
-						},
-					})
-					.from(projects)
-					.leftJoin(users, eq(projects.ownerId, users.id))
-					.where(
-						and(
-							eq(projects.slug, projectSlug),
-							eq(projects.organizationId, organization.id),
-						),
-					)
-					.limit(1);
+				const projectRepository = new ProjectRepository();
+				const project = await projectRepository.getProjectByProjectSlug({
+					orgId: organization.id,
+					projectSlug: projectSlug,
+				});
 
 				if (!project) {
 					throw new BadRequestError("Project not found");

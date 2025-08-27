@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { db, projects } from "@/db/connection";
+import { ProjectRepository } from "@/repositories/project-repository";
 import { createSlug } from "@/utils/create-slug";
 import { getUserPermissions } from "@/utils/get-user-permissions";
 import { auth } from "../../middlewares/auth";
@@ -34,6 +34,8 @@ export async function createProject(app: FastifyInstance) {
 			},
 			async (request, reply) => {
 				const { slug } = request.params;
+
+				const { description, name } = request.body;
 				const userId = await request.getCurrentUserId();
 
 				const { membership, organization } =
@@ -47,18 +49,17 @@ export async function createProject(app: FastifyInstance) {
 					);
 				}
 
-				const { description, name } = request.body;
+				const projectRepository = new ProjectRepository();
 
-				const [project] = await db
-					.insert(projects)
-					.values({
-						name,
-						slug: createSlug(name),
-						description,
-						organizationId: organization.id,
-						ownerId: userId,
-					})
-					.returning();
+				const projectSlug = createSlug(name);
+
+				const project = await projectRepository.insertProject({
+					description,
+					name,
+					orgId: organization.id,
+					ownerId: userId,
+					slug: projectSlug,
+				});
 
 				return reply.status(201).send({
 					projectId: project.id,

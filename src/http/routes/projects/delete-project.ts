@@ -4,7 +4,8 @@ import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { projectSchema } from "@/auth";
-import { db, projects } from "@/db/connection";
+import { db } from "@/db/connection";
+import { ProjectRepository } from "@/repositories/project-repository";
 import { getUserPermissions } from "@/utils/get-user-permissions";
 import { auth } from "../../middlewares/auth";
 import { BadRequestError } from "../_errors/bad-request-error";
@@ -59,7 +60,8 @@ export async function deleteProject(app: FastifyInstance) {
 					);
 				}
 
-				await db.delete(projects).where(eq(projects.id, projectId));
+				const projectRepository = new ProjectRepository();
+				await projectRepository.deleteProject(projectId);
 
 				return reply.status(204).send();
 			},

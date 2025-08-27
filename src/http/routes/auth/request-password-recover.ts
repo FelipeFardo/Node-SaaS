@@ -1,8 +1,8 @@
-import { eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import z from "zod";
-import { db, tokens } from "@/db/connection";
+import { TokenRepository } from "@/repositories/token-repository";
+import { UserRepository } from "@/repositories/user-repository";
 
 export async function requestPasswordRecover(app: FastifyInstance) {
 	app.withTypeProvider<ZodTypeProvider>().post(
@@ -22,26 +22,18 @@ export async function requestPasswordRecover(app: FastifyInstance) {
 		async (request, reply) => {
 			const { email } = request.body;
 
-			const userFromEmail = await db.query.users.findFirst({
-				where(fields) {
-					return eq(fields.email, email);
-				},
-			});
+			const userRepository = new UserRepository();
+			const tokenRepository = new TokenRepository();
+			const userFromEmail = await userRepository.getUserByEmail(email);
+
 			if (!userFromEmail) {
 				// We don't want people to know if really exists
 				return reply.status(201).send();
 			}
 
-			const [token] = await db
-				.insert(tokens)
-				.values({
-					type: "PASSWORD_RECOVER",
-					userId: userFromEmail.id,
-				})
-				.returning();
-
-			const { id: code } = token;
-
+			const { id: code } = await tokenRepository.createNewToken(
+				userFromEmail.id,
+			);
 			// Send e-mail with password recover link
 
 			console.log("Recover password token: ", code);

@@ -38,3 +38,5 @@ export const membersRelations = relations(members, ({ one }) => ({
 		references: [users.id],
 	}),
 }));
+
+export type Role = (typeof Role.enumValues)[number];

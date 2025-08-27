@@ -1,12 +1,9 @@
-import { eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { organizationSchema } from "@/auth";
-
-import { db, organizations } from "@/db/connection";
+import { OrganizationRepository } from "@/repositories/organization-repository";
 import { getUserPermissions } from "@/utils/get-user-permissions";
-
 import { auth } from "../../middlewares/auth";
 import { UnauthorizedError } from "../_errors/unauthorized-error";
 
@@ -34,6 +31,7 @@ export async function shutdownOrganization(app: FastifyInstance) {
 
 				const userId = await request.getCurrentUserId();
 
+				const organizationRepository = new OrganizationRepository();
 				const { membership, organization } =
 					await request.getUserMembership(slug);
 
@@ -47,9 +45,7 @@ export async function shutdownOrganization(app: FastifyInstance) {
 					);
 				}
 
-				await db
-					.delete(organizations)
-					.where(eq(organizations.id, organization.id));
+				await organizationRepository.deleteOrganization(organization.id);
 
 				return reply.status(204).send();
 			},

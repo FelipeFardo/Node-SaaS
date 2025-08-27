@@ -1,13 +1,12 @@
-import { and, eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 
 import { roleSchema } from "@/auth";
 
-import { db, invites, members, users } from "@/db/connection";
+import { InviteRepository } from "@/repositories/invite-repository";
+import { MemberRepository } from "@/repositories/member-repository";
 import { getUserPermissions } from "@/utils/get-user-permissions";
-
 import { auth } from "../../middlewares/auth";
 import { BadRequestError } from "../_errors/bad-request-error";
 import { UnauthorizedError } from "../_errors/unauthorized-error";
@@ -44,6 +43,8 @@ export async function createInvite(app: FastifyInstance) {
 				const { membership, organization } =
 					await request.getUserMembership(slug);
 
+				const inviteRepository = new InviteRepository();
+				const memberRepository = new MemberRepository();
 				const { cannot } = getUserPermissions(userId, membership.role);
 
 				if (cannot("create", "Invite")) {
@@ -65,14 +66,11 @@ export async function createInvite(app: FastifyInstance) {
 					);
 				}
 
-				const inviteWithSameEmail = await db.query.invites.findFirst({
-					where(fields) {
-						return and(
-							eq(fields.email, email),
-							eq(fields.organizationId, organization.id),
-						);
-					},
-				});
+				const inviteWithSameEmail =
+					await inviteRepository.getInviteByUserEmailAndOrganizationId({
+						userEmail: email,
+						organizationId: organization.id,
+					});
 
 				if (inviteWithSameEmail) {
 					throw new BadRequestError(
@@ -80,16 +78,10 @@ export async function createInvite(app: FastifyInstance) {
 					);
 				}
 
-				const [memberWithSameEmail] = await db
-					.select()
-					.from(members)
-					.innerJoin(users, eq(members.userId, users.id))
-					.where(
-						and(
-							eq(members.organizationId, organization.id),
-							eq(users.email, email),
-						),
-					);
+				const memberWithSameEmail = await memberRepository.getMemberByEmail({
+					organizationId: organization.id,
+					userEmail: email,
+				});
 
 				if (memberWithSameEmail) {
 					throw new BadRequestError(
@@ -97,15 +89,12 @@ export async function createInvite(app: FastifyInstance) {
 					);
 				}
 
-				const [invite] = await db
-					.insert(invites)
-					.values({
-						organizationId: organization.id,
-						email,
-						role,
-						authorId: userId,
-					})
-					.returning();
+				const invite = await inviteRepository.insertInvite({
+					email,
+					organizationId: organization.id,
+					role,
+					userId,
+				});
 
 				return reply.status(201).send({
 					inviteId: invite.id,

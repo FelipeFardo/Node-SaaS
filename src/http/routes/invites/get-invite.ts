@@ -1,11 +1,9 @@
-import { eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { roleSchema } from "@/auth";
 
-import { db, invites, organizations, users } from "@/db/connection";
-
+import { InviteRepository } from "@/repositories/invite-repository";
 import { BadRequestError } from "../_errors/bad-request-error";
 
 export async function getInvite(app: FastifyInstance) {
@@ -48,27 +46,12 @@ export async function getInvite(app: FastifyInstance) {
 			async (request) => {
 				const { inviteId } = request.params;
 
-				const [invite] = await db
-					.select({
-						invite: {
-							id: invites.id,
-							email: invites.email,
-							role: invites.role,
-							createdAt: invites.createdAt,
-						},
-						author: {
-							id: users.id,
-							name: users.name,
-							avatarUrl: users.avatarUrl,
-						},
-						organization: {
-							name: organizations.name,
-						},
-					})
-					.from(invites)
-					.leftJoin(users, eq(invites.authorId, users.id))
-					.leftJoin(organizations, eq(invites.organizationId, organizations.id))
-					.where(eq(invites.id, inviteId));
+				const inviteRepository = new InviteRepository();
+
+				const invite =
+					await inviteRepository.getInviteWithAuthorAndOrganizationById(
+						inviteId,
+					);
 
 				if (!invite) {
 					throw new BadRequestError("Invite not found");

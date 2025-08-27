@@ -1,9 +1,7 @@
-import { eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { db, members, organizations } from "@/db/connection";
-import { createSlug } from "@/utils/create-slug";
+import { OrganizationRepository } from "@/repositories/organization-repository";
 import { auth } from "../../middlewares/auth";
 import { BadRequestError } from "../_errors/bad-request-error";
 
@@ -22,7 +20,6 @@ export async function createOrganization(app: FastifyInstance) {
 						name: z.string(),
 						domain: z.string().nullish(),
 						shouldAttachUsersByDomain: z.boolean().optional(),
-						// avatarUrl: z.string(),
 					}),
 					response: {
 						201: z.object({
@@ -35,12 +32,11 @@ export async function createOrganization(app: FastifyInstance) {
 				const userId = await request.getCurrentUserId();
 				const { name, domain, shouldAttachUsersByDomain } = request.body;
 
+				const organizationRepository = new OrganizationRepository();
+
 				if (domain) {
-					const organizationByDomain = await db.query.organizations.findFirst({
-						where(fields) {
-							return eq(fields.domain, domain);
-						},
-					});
+					const organizationByDomain =
+						await organizationRepository.getOrganizationByDomain(domain);
 
 					if (organizationByDomain) {
 						throw new BadRequestError(
@@ -49,27 +45,13 @@ export async function createOrganization(app: FastifyInstance) {
 					}
 				}
 
-				let organizationId = "";
+				const organizationId = "";
 
-				await db.transaction(async (trx) => {
-					const [organization] = await trx
-						.insert(organizations)
-						.values({
-							name,
-							slug: createSlug(name),
-							domain,
-							shouldAttachUsersByDomain,
-							ownerId: userId,
-							// avatarUrl,
-						})
-						.returning();
-
-					organizationId = organization.id;
-					await trx.insert(members).values({
-						organizationId: organization.id,
-						userId,
-						role: "ADMIN",
-					});
+				await organizationRepository.insertOrganization({
+					name,
+					shouldAttachUsersByDomain,
+					domain,
+					ownerId: userId,
 				});
 
 				return reply.status(201).send({

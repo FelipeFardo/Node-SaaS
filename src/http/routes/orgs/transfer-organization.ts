@@ -1,12 +1,9 @@
-import { and, eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { organizationSchema } from "@/auth";
-
-import { db, members, organizations } from "@/db/connection";
+import { MemberRepository } from "@/repositories/member-repository";
 import { getUserPermissions } from "@/utils/get-user-permissions";
-
 import { auth } from "../../middlewares/auth";
 import { BadRequestError } from "../_errors/bad-request-error";
 import { UnauthorizedError } from "../_errors/unauthorized-error";
@@ -52,14 +49,13 @@ export async function transferOrganization(app: FastifyInstance) {
 				}
 				const { transferToUserId } = request.body;
 
-				const transferToMembership = await db.query.members.findFirst({
-					where(fields) {
-						return and(
-							eq(fields.organizationId, organization.id),
-							eq(fields.userId, transferToUserId),
-						);
-					},
-				});
+				const memberRepository = new MemberRepository();
+
+				const transferToMembership =
+					await memberRepository.getMemberByOrgIdAndUserId({
+						orgId: organization.id,
+						userId: transferToUserId,
+					});
 
 				if (!transferToMembership) {
 					throw new BadRequestError(
@@ -67,25 +63,9 @@ export async function transferOrganization(app: FastifyInstance) {
 					);
 				}
 
-				await db.transaction(async (trx) => {
-					await trx
-						.update(members)
-						.set({
-							role: "ADMIN",
-						})
-						.where(
-							and(
-								eq(members.organizationId, organization.id),
-								eq(members.userId, transferToUserId),
-							),
-						);
-
-					await trx
-						.update(organizations)
-						.set({
-							ownerId: transferToUserId,
-						})
-						.where(eq(organizations.id, organization.id));
+				await memberRepository.transferOrganizationOwnership({
+					orgId: organization.id,
+					transferToUserId,
 				});
 
 				return reply.status(204).send();

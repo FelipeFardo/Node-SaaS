@@ -1,9 +1,8 @@
-import { and, eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { projectSchema } from "@/auth";
-import { db, projects } from "@/db/connection";
+import { ProjectRepository } from "@/repositories/project-repository";
 import { getUserPermissions } from "@/utils/get-user-permissions";
 import { auth } from "../../middlewares/auth";
 import { BadRequestError } from "../_errors/bad-request-error";
@@ -40,13 +39,11 @@ export async function updateProject(app: FastifyInstance) {
 				const { membership, organization } =
 					await request.getUserMembership(slug);
 
-				const project = await db.query.projects.findFirst({
-					where(fields) {
-						return and(
-							eq(fields.id, projectId),
-							eq(fields.organizationId, organization.id),
-						);
-					},
+				const projectRepository = new ProjectRepository();
+
+				const project = projectRepository.getProjectByProjectSlug({
+					orgId: organization.id,
+					projectSlug: slug,
 				});
 
 				if (!project) {
@@ -64,13 +61,7 @@ export async function updateProject(app: FastifyInstance) {
 
 				const { name, description } = request.body;
 
-				await db
-					.update(projects)
-					.set({
-						name,
-						description,
-					})
-					.where(eq(projects.id, projectId));
+				await projectRepository.updateProject({ description, name, projectId });
 
 				return reply.status(204).send();
 			},

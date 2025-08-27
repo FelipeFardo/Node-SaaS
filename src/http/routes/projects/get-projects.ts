@@ -1,12 +1,9 @@
-import { desc, eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
+import { ProjectRepository } from "@/repositories/project-repository";
 // Drizzle ORM equivalent
-import { db } from "@/db/connection";
-import { projects as projectsTable, users } from "@/db/schema";
 import { getUserPermissions } from "@/utils/get-user-permissions";
-
 import { auth } from "../../middlewares/auth";
 import { UnauthorizedError } from "../_errors/unauthorized-error";
 
@@ -62,24 +59,10 @@ export async function getProjects(app: FastifyInstance) {
 					);
 				}
 
-				const drizzleProjects = await db
-					.select({
-						id: projectsTable.id,
-						name: projectsTable.name,
-						description: projectsTable.description,
-						slug: projectsTable.slug,
-						ownerId: projectsTable.ownerId,
-						avatarUrl: projectsTable.avatarUrl,
-						organizationId: projectsTable.organizationId,
-						createdAt: projectsTable.createdAt,
-						owner_id: users.id,
-						owner_name: users.name,
-						owner_avatarUrl: users.avatarUrl,
-					})
-					.from(projectsTable)
-					.leftJoin(users, eq(projectsTable.ownerId, users.id))
-					.where(eq(projectsTable.organizationId, organization.id))
-					.orderBy(desc(projectsTable.createdAt));
+				const projectRepository = new ProjectRepository();
+				const drizzleProjects = await projectRepository.getProjectByOrgId(
+					organization.id,
+				);
 
 				const projects = drizzleProjects.map((project) => ({
 					id: project.id,

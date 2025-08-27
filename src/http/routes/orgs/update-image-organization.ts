@@ -1,10 +1,7 @@
-import { eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
-
-import { db, organizations } from "@/db/connection";
-
+import { OrganizationRepository } from "@/repositories/organization-repository";
 import { auth } from "../../middlewares/auth";
 
 export async function updateImageOrganization(app: FastifyInstance) {
@@ -36,12 +33,12 @@ export async function updateImageOrganization(app: FastifyInstance) {
 
 				const { imageUrl } = request.body;
 
-				await db
-					.update(organizations)
-					.set({
-						avatarUrl: imageUrl,
-					})
-					.where(eq(organizations.id, organization.id));
+				const organizationRepository = new OrganizationRepository();
+
+				await organizationRepository.updateAvatar({
+					imageUrl,
+					orgId: organization.id,
+				});
 
 				return reply.status(204).send();
 			},
