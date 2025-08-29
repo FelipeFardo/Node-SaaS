@@ -43,6 +43,7 @@ import { deleteProject } from "./routes/projects/delete-project";
 import { getProject } from "./routes/projects/get-project";
 import { getProjects } from "./routes/projects/get-projects";
 import { updateProject } from "./routes/projects/update-project";
+import { createUpload } from "./routes/uploads/create-upload";
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 
@@ -122,7 +123,7 @@ app.register(getPendingInvites);
 
 app.register(getOrganizationBilling);
 
-// app.register(createUpload);
+app.register(createUpload);
 
 app.listen({ port: env.PORT, host: "0.0.0.0" }).then(() => {
 	console.log("🚀 Server running on port", env.PORT);

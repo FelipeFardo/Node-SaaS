@@ -14,20 +14,9 @@ import {
  * Reset database
  */
 
-export function createSlug(text: string): string {
-	return text
-		.normalize("NFD")
-		.replace(/[\u0300-\u036f]/g, "")
-		.replace(/[^\w\s]/gi, "")
-		.trim()
-		.replace(/\s+/g, "-")
-		.toLowerCase();
-}
-
 async function seed() {
 	await db.delete(invites);
 	await db.delete(tokens);
-
 	await db.delete(members);
 	await db.delete(organizations);
 	await db.delete(accounts);
@@ -75,8 +64,6 @@ async function seed() {
 		.values([
 			{
 				name: "Hamburgueria do Zé",
-				description:
-					"É um restaurante acolhedor que oferece pratos da gastronomia local e internacional, com ingredientes frescos e apresentação impecável. Com um ambiente elegante e atendimento atencioso, é o lugar perfeito para momentos especiais e refeições memoráveis.",
 				ownerId: user.id,
 				slug: "restaurante-do-ze",
 				avatarUrl:
@@ -84,8 +71,6 @@ async function seed() {
 			},
 			{
 				name: "Comida em Loop",
-				description:
-					"É um restaurante acolhedor que oferece pratos da gastronomia local e internacional, com ingredientes frescos e apresentação impecável. Com um ambiente elegante e atendimento atencioso, é o lugar perfeito para momentos especiais e refeições memoráveis.",
 				ownerId: user.id,
 				slug: "comida-em-loop",
 				avatarUrl:
@@ -93,8 +78,6 @@ async function seed() {
 			},
 			{
 				name: "Café com Debug",
-				description:
-					"É um restaurante acolhedor que oferece pratos da gastronomia local e internacional, com ingredientes frescos e apresentação impecável. Com um ambiente elegante e atendimento atencioso, é o lugar perfeito para momentos especiais e refeições memoráveis.",
 				ownerId: user.id,
 				slug: "cafe-com-debug",
 				avatarUrl:

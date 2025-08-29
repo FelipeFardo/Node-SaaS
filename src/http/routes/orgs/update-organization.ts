@@ -24,7 +24,6 @@ export async function updateOrganization(app: FastifyInstance) {
 						name: z.string(),
 						domain: z.string().nullish(),
 						shouldAttachUsersByDomain: z.boolean().optional(),
-						description: z.string().nullable(),
 					}),
 					params: z.object({
 						slug: z.string(),
@@ -39,8 +38,7 @@ export async function updateOrganization(app: FastifyInstance) {
 
 				const userId = await request.getCurrentUserId();
 
-				const { name, domain, shouldAttachUsersByDomain, description } =
-					request.body;
+				const { name, domain, shouldAttachUsersByDomain } = request.body;
 
 				const { membership, organization } =
 					await request.getUserMembership(slug);
@@ -75,7 +73,6 @@ export async function updateOrganization(app: FastifyInstance) {
 					name,
 					domain,
 					shouldAttachUsersByDomain,
-					description,
 					orgId: organization.id,
 				});
 

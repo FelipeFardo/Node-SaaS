@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { OrganizationRepository } from "@/repositories/organization-repository";
+import { createSlug } from "@/utils/create-slug";
 import { auth } from "../../middlewares/auth";
 import { BadRequestError } from "../_errors/bad-request-error";
 
@@ -23,7 +24,7 @@ export async function createOrganization(app: FastifyInstance) {
 					}),
 					response: {
 						201: z.object({
-							organizationId: z.string().uuid(),
+							organizationId: z.uuid(),
 						}),
 					},
 				},
@@ -45,18 +46,15 @@ export async function createOrganization(app: FastifyInstance) {
 					}
 				}
 
-				const organizationId = "";
-
-				await organizationRepository.insertOrganization({
+				const organizationId = await organizationRepository.insertOrganization({
 					name,
 					shouldAttachUsersByDomain,
 					domain,
+					slug: createSlug(name),
 					ownerId: userId,
 				});
 
-				return reply.status(201).send({
-					organizationId,
-				});
+				return reply.status(201).send({ organizationId });
 			},
 		);
 }

@@ -1,6 +1,5 @@
 import { and, eq, ne } from "drizzle-orm";
 import { db, members, organizations } from "@/db/connection";
-import { createSlug } from "@/utils/create-slug";
 
 export class OrganizationRepository {
 	async getOrganizationBySlug(slug: string) {
@@ -45,21 +44,24 @@ export class OrganizationRepository {
 	async insertOrganization({
 		domain,
 		name,
+		slug,
 		shouldAttachUsersByDomain,
 		ownerId,
 	}: {
 		name: string;
 		domain: string | null | undefined;
+		slug: string;
 		shouldAttachUsersByDomain: boolean | undefined;
 		ownerId: string;
 	}) {
 		let organizationId = "";
+
 		await db.transaction(async (trx) => {
 			const [organization] = await trx
 				.insert(organizations)
 				.values({
 					name,
-					slug: createSlug(name),
+					slug,
 					domain,
 					shouldAttachUsersByDomain,
 					ownerId: ownerId,
@@ -67,6 +69,7 @@ export class OrganizationRepository {
 				.returning();
 
 			organizationId = organization.id;
+
 			await trx.insert(members).values({
 				organizationId: organization.id,
 				userId: ownerId,
@@ -108,12 +111,10 @@ export class OrganizationRepository {
 	async updateOrganization({
 		domain,
 		name,
-		description,
 		shouldAttachUsersByDomain,
 		orgId,
 	}: {
 		name: string;
-		description: string | null;
 		domain: string | null | undefined;
 		shouldAttachUsersByDomain: boolean | undefined;
 		orgId: string;
@@ -124,7 +125,6 @@ export class OrganizationRepository {
 				name,
 				domain,
 				shouldAttachUsersByDomain,
-				description,
 			})
 			.where(eq(organizations.id, orgId));
 	}

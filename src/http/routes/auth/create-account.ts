@@ -43,7 +43,7 @@ export async function createAccount(app: FastifyInstance) {
 				email,
 				name,
 				passwordHash,
-				autoJoinOrganizationId: autoJoinOrganization?.id ?? null,
+				autoJoinOrganizationId: autoJoinOrganization?.id || null,
 			});
 
 			return reply.status(201).send();
