@@ -46,12 +46,12 @@ export class ProjectRepository {
 				description: projects.description,
 				slug: projects.slug,
 				ownerId: projects.ownerId,
-				avatarUrl: projects.avatarUrl,
+				avatarKey: projects.avatarKey,
 				organizationId: projects.organizationId,
 				owner: {
 					id: users.id,
 					name: users.name,
-					avatarUrl: users.avatarUrl,
+					avatarKey: users.avatarKey,
 				},
 			})
 			.from(projects)
@@ -72,12 +72,12 @@ export class ProjectRepository {
 				description: projects.description,
 				slug: projects.slug,
 				ownerId: projects.ownerId,
-				avatarUrl: projects.avatarUrl,
+				avatarKey: projects.avatarKey,
 				organizationId: projects.organizationId,
 				createdAt: projects.createdAt,
 				owner_id: users.id,
 				owner_name: users.name,
-				owner_avatarUrl: users.avatarUrl,
+				owner_avatarKey: users.avatarKey,
 			})
 			.from(projects)
 			.leftJoin(users, eq(projects.ownerId, users.id))

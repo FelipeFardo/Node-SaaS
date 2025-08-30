@@ -29,14 +29,14 @@ export async function getProjects(app: FastifyInstance) {
 									name: z.string(),
 									description: z.string(),
 									slug: z.string(),
-									avatarUrl: z.string().url().nullable(),
+									avatarKey: z.string().url().nullable(),
 									organizationId: z.uuid(),
 									ownerId: z.uuid(),
 									createdAt: z.date(),
 									owner: z.object({
 										id: z.uuid(),
 										name: z.string().nullable(),
-										avatarUrl: z.string().url().nullable(),
+										avatarKey: z.string().url().nullable(),
 									}),
 								}),
 							),
@@ -70,13 +70,13 @@ export async function getProjects(app: FastifyInstance) {
 					description: project.description,
 					slug: project.slug,
 					ownerId: project.ownerId,
-					avatarUrl: project.avatarUrl,
+					avatarKey: project.avatarKey,
 					organizationId: project.organizationId,
 					createdAt: project.createdAt,
 					owner: {
 						id: project.owner_id ?? "",
 						name: project.owner_name ?? null,
-						avatarUrl: project.owner_avatarUrl ?? null,
+						avatarKey: project.owner_avatarKey ?? null,
 					},
 				}));
 

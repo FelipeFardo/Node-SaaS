@@ -18,7 +18,7 @@ export const users = pgTable(
 		phone: text("phone"),
 		emailVerified: timestamp("emailVerified"),
 		passwordHash: text("password_hash"),
-		avatarUrl: text("avatar_url"),
+		avatarKey: text("avatar_key"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),
 	},

@@ -16,7 +16,7 @@ export const projects = pgTable(
 		name: text("name").notNull(),
 		description: text("description").notNull(),
 		slug: text("slug").notNull(),
-		avatarUrl: text("avatar_url"),
+		avatarKey: text("avatar_url"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),
 		organizationId: uuid("organization_id")

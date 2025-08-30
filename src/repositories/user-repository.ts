@@ -26,7 +26,7 @@ export class UserRepository {
 				id: true,
 				name: true,
 				email: true,
-				avatarUrl: true,
+				avatarKey: true,
 			},
 			where(fields) {
 				return eq(fields.id, id);

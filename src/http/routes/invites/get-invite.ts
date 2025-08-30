@@ -35,7 +35,7 @@ export async function getInvite(app: FastifyInstance) {
 									.object({
 										id: z.string().uuid(),
 										name: z.string().nullable(),
-										avatarUrl: z.string().url().nullable(),
+										avatarKey: z.string().url().nullable(),
 									})
 									.nullable(),
 							}),

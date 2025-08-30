@@ -2,6 +2,15 @@ import { and, eq, ne } from "drizzle-orm";
 import { db, members, organizations } from "@/db/connection";
 
 export class OrganizationRepository {
+	async getOrganizationById(id: string) {
+		const organization = await db.query.organizations.findFirst({
+			where(fields) {
+				return eq(fields.slug, id);
+			},
+		});
+		return organization;
+	}
+
 	async getOrganizationBySlug(slug: string) {
 		const organization = await db.query.organizations.findFirst({
 			where(fields) {
@@ -85,7 +94,7 @@ export class OrganizationRepository {
 				id: organizations.id,
 				name: organizations.name,
 				slug: organizations.slug,
-				avatarUrl: organizations.avatarUrl,
+				avatarKey: organizations.avatarKey,
 				role: members.role,
 			})
 			.from(organizations)
@@ -99,11 +108,17 @@ export class OrganizationRepository {
 		await db.delete(organizations).where(eq(organizations.id, id));
 	}
 
-	async updateAvatar({ imageUrl, orgId }: { imageUrl: string; orgId: string }) {
+	async updateAvatar({
+		avatarKey,
+		orgId,
+	}: {
+		avatarKey: string;
+		orgId: string;
+	}) {
 		await db
 			.update(organizations)
 			.set({
-				avatarUrl: imageUrl,
+				avatarKey: avatarKey,
 			})
 			.where(eq(organizations.id, orgId));
 	}

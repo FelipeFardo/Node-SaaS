@@ -96,7 +96,7 @@ export class InviteRepository {
 				author: {
 					id: users.id,
 					name: users.name,
-					avatarUrl: users.avatarUrl,
+					avatarKey: users.avatarKey,
 				},
 				organization: {
 					name: organizations.name,
@@ -145,7 +145,7 @@ export class InviteRepository {
 				author: {
 					id: users.id,
 					name: users.name,
-					avatarUrl: users.avatarUrl,
+					avatarKey: users.avatarKey,
 				},
 				organization: {
 					name: organizations.name,

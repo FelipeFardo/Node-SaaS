@@ -71,7 +71,7 @@
 //         id: githubId,
 //         name,
 //         email,
-//         avatar_url: avatarUrl,
+//         avatar_url: avatarKey,
 //       } = z
 //         .object({
 //           id: z.number().int().transform(String),
@@ -99,7 +99,7 @@
 //           .values({
 //             name,
 //             email,
-//             avatarUrl,
+//             avatarKey,
 //           })
 //           .returning()
 //         user = userCreated

@@ -34,7 +34,7 @@ export class MemberRepository {
 					id: users.id,
 					name: users.name,
 					email: users.email,
-					avatarUrl: users.avatarUrl,
+					avatarKey: users.avatarKey,
 				},
 			})
 			.from(members)

@@ -34,7 +34,7 @@ async function seed() {
 			{
 				name: "John Doe",
 				email: "john@acme.com",
-				avatarUrl: "https://github.com/shadcn.png",
+				avatarKey: "https://github.com/shadcn.png",
 				passwordHash:
 					"$2a$12$uMTAFMnwNkZFrMPTgp2TjuE2ErfdLkkYyiRhol8OVR41p1YONsDn2",
 			},
@@ -66,22 +66,19 @@ async function seed() {
 				name: "Hamburgueria do Zé",
 				ownerId: user.id,
 				slug: "restaurante-do-ze",
-				avatarUrl:
-					"https://pub-9448e6c9570e405b8072625bd2387965.r2.dev/la-grotta-entrance.webp",
+				avatarKey: "crash-bandicoot-n-sane-trilogy-screen-04-us-03dec16.jpg",
 			},
 			{
 				name: "Comida em Loop",
 				ownerId: user.id,
 				slug: "comida-em-loop",
-				avatarUrl:
-					"https://pub-9448e6c9570e405b8072625bd2387965.r2.dev/franc%C3%AAs-caf%C3%A8-e-restaurante-em-paris.webp",
+				avatarKey: "crash-bandicoot-n-sane-trilogy-screen-04-us-03dec16.jpg",
 			},
 			{
 				name: "Café com Debug",
 				ownerId: user.id,
 				slug: "cafe-com-debug",
-				avatarUrl:
-					"https://pub-9448e6c9570e405b8072625bd2387965.r2.dev/restaurante-e-bar-de-segunda-tadu-arquitetura_9.jpg",
+				avatarKey: "crash-bandicoot-n-sane-trilogy-screen-04-us-03dec16.jpg",
 			},
 		])
 		.returning();

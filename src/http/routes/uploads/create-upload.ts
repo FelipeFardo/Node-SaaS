@@ -25,7 +25,7 @@ export async function createUpload(app: FastifyInstance) {
 					response: {
 						201: z.object({
 							signedUrl: z.string(),
-							fileUrl: z.string(),
+							fileName: z.string(),
 						}),
 					},
 				},
@@ -50,7 +50,7 @@ export async function createUpload(app: FastifyInstance) {
 					})
 					.returning();
 
-				return reply.status(201).send({ signedUrl, fileUrl });
+				return reply.status(201).send({ signedUrl, fileName });
 			},
 		);
 }

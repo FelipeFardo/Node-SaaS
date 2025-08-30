@@ -31,7 +31,7 @@ export async function getMembers(app: FastifyInstance) {
 									role: roleSchema,
 									name: z.string().nullable(),
 									email: z.email(),
-									avatarUrl: z.string().url().nullable(),
+									avatarKey: z.string().url().nullable(),
 								}),
 							),
 						}),

@@ -17,7 +17,7 @@ export const organizations = pgTable(
 		name: text("name").notNull(),
 		slug: text("slug").notNull(),
 		domain: text("domain"),
-		avatarUrl: text("avatar_url"),
+		avatarKey: text("avatar_key"),
 		shouldAttachUsersByDomain: boolean("should_attach_users_by_domain")
 			.default(false)
 			.notNull(),
