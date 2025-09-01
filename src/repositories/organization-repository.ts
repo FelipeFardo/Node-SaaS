@@ -1,5 +1,5 @@
 import { and, eq, ne } from "drizzle-orm";
-import { db, members, organizations } from "@/db/connection";
+import { db, files, members, organizations } from "@/db/connection";
 
 export class OrganizationRepository {
 	async getOrganizationById(id: string) {
@@ -115,12 +115,16 @@ export class OrganizationRepository {
 		avatarKey: string;
 		orgId: string;
 	}) {
-		await db
-			.update(organizations)
-			.set({
-				avatarKey: avatarKey,
-			})
-			.where(eq(organizations.id, orgId));
+		await db.transaction(async (db) => {
+			await db
+				.update(organizations)
+				.set({
+					avatarKey: avatarKey,
+				})
+				.where(eq(organizations.id, orgId));
+
+			db.delete(files).where(eq(files.key, avatarKey));
+		});
 	}
 
 	async updateOrganization({

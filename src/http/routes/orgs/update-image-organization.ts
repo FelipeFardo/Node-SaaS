@@ -1,7 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { deleteFromObjectStorage } from "@/lib/cloudflare";
 import { OrganizationRepository } from "@/repositories/organization-repository";
 import { auth } from "../../middlewares/auth";
 
@@ -36,7 +35,6 @@ export async function updateImageOrganization(app: FastifyInstance) {
 
 				const organizationRepository = new OrganizationRepository();
 
-				await deleteFromObjectStorage(organization.avatarKey);
 				await organizationRepository.updateAvatar({
 					avatarKey: imageName,
 					orgId: organization.id,
